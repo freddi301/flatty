@@ -64,7 +64,6 @@ function Glass(id, player){
 		ctx.fillStyle = "#000000";
 		ctx.fillText(player.name, player.x, player.y);
 	}
-	var noise = document.getElementById("noise");
 	var drawWorld = function(players){
 		ctx.clearRect(0,0,canvas.width, canvas.height);
 		ctx.save();
