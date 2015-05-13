@@ -64,10 +64,9 @@ function mousePositionElement(e) {
 function mousePositionElementCenter(e){
 	var pos = mousePositionElement(e);
 	var target = mouseTarget(e);
-	return {
-		x : pos.x - target.offsetWidth/2,
-		y : pos.y - target.offsetHeight/2, 
-	}
+	var x = pos.x - target.offsetWidth/2;
+	var y = pos.y - target.offsetHeight/2;
+	return {x:x, y:y}
 }
 
 function normalize(o){
@@ -82,3 +81,5 @@ function normalize(o){
 	}
 	return ret;
 }
+
+function incircle(cx, cy, r, x, y){return Math.pow(x - cx, 2) + Math.pow(y - cy, 2) < Math.pow(r,2)}
