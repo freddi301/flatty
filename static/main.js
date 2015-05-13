@@ -90,7 +90,7 @@ function init(){
 		glass.drawWorld(player.others);
 		window.requestAnimationFrame(drawit);
 	};
-	drawit();	
+	drawit();
 };
 
 function eat(p, others){

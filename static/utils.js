@@ -83,3 +83,5 @@ function normalize(o){
 }
 
 function incircle(cx, cy, r, x, y){return Math.pow(x - cx, 2) + Math.pow(y - cy, 2) < Math.pow(r,2)}
+
+function area2radius(area){return Math.sqrt(area/Math.PI)}

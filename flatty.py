@@ -13,8 +13,12 @@ def incircle(cx, cy, r, x, y):
 def area2radius(area):
 	return math.sqrt(area/math.pi)
 
+def absolute(numbers):
+	for number in numbers:
+		yield abs(number)
+
 def normalize(numbers):
-	greatest = max(numbers)
+	greatest = max(absolute(numbers))
 	return [i/greatest for i in numbers]
 
 class Glass:
@@ -22,11 +26,13 @@ class Glass:
 		self.radius = radius
 		self.cells = {}
 	def newCell(self, token, name, socket):
-		self.cells[token] = Cell(name, socket)
+		self.cells[token] = Cell(name, socket, self.radius)
 	def computeWorld(self):
-		for cell in self.cells.itervalues():
+		for cell in self.cells.values():
 			cell.move()
 			self.broadcastWorld()
+		t = threading.Timer(0.3, self.computeWorld)
+		t.start()
 	def processMessage(self, message):
 		if u"token" in message:
 			cell = self.cells[message[u"token"]]
@@ -43,17 +49,16 @@ class Glass:
 			t = threading.Thread(target=self.sendWorld, args = (cell,world))
 			t.daemon = True
 			t.start()
-		t = threading.Timer(0.3, self.broadcastWorld)
-		t.start()
 	
 class Cell:
-	def __init__(self, name, socket):
+	def __init__(self, name, socket, enclojure):
 		self.name = name
 		self.x = 0
 		self.y = 0
 		self.mass = 100
 		self.direction = (0, 0)
 		self.socket = socket
+		self.enclojure = enclojure
 	def radius(self):
 		return area2radius(self.mass)
 	def speed(self):
@@ -63,6 +68,10 @@ class Cell:
 		speed = self.speed()
 		self.x += x_direction * speed
 		self.y += y_direction * speed
+		if self.x<0: self.x = 0
+		if self.y<0: self.y = 0
+		if self.x>self.enclojure: self.x = self.enclojure
+		if self.y>self.enclojure: self.y = self.enclojure
 	def state(self):
 		return {
 			u"name":self.name,
@@ -83,7 +92,7 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		token = str(time.time())
 		name = self.get_argument(u"name",u"unnamed")
 		glass.newCell(token, name, self)
-		self.write_message(json.dumps({u"token": token}))
+		self.write_message(json.dumps({u"token": token, u"enclojure": glass.radius}))
 
 	def on_message(self, message):
 		mex = json.loads(message)
@@ -95,6 +104,6 @@ application = tornado.web.Application([
 ])
 
 if __name__ == "__main__":
-	glass.broadcastWorld()
+	glass.computeWorld()
 	application.listen(80)
 	tornado.ioloop.IOLoop.instance().start()
