@@ -41,15 +41,18 @@ class Glass:
 		t.start()
 	def processMessage(self, message):
 		if (u"token" in message) & (u"id" in message):
-			cell = self.cells[message[u"id"]]
-			if cell.token != message[u"token"]: return
-			if u"direction" in message:
-				direction = message[u"direction"]
-				cell.direction = normalize((direction[u"x"], direction[u"y"]))
-			elif u"eatseed" in message:
-				cell.eatseed(message[u"eatseed"])
-			elif u"eatcell" in message:
-				cell.eatcell(message[u"eatcell"])
+			try:
+				cell = self.cells[message[u"id"]]
+				if cell.token != message[u"token"]: return
+				if u"direction" in message:
+					direction = message[u"direction"]
+					cell.direction = normalize((direction[u"x"], direction[u"y"]))
+				elif u"eatseed" in message:
+					cell.eatseed(message[u"eatseed"])
+				elif u"eatcell" in message:
+					cell.eatcell(message[u"eatcell"])
+			except:
+				pass
 				
 	def sendWorld(self, cell, world):
 		try:
@@ -77,8 +80,8 @@ class Glass:
 class Cell:
 	def __init__(self, name, socket, enclojure, token, glass, cellid):
 		self.name = name
-		self.x = 0
-		self.y = 0
+		self.x = random.randint(0, glass.radius)
+		self.y = random.randint(0, glass.radius)
 		self.mass = 100
 		self.direction = (0, 0)
 		self.socket = socket
@@ -100,10 +103,13 @@ class Cell:
 		if self.x>self.enclojure: self.x = self.enclojure
 		if self.y>self.enclojure: self.y = self.enclojure
 	def eatseed(self, seedid):
-		seed = self.glass.seeds[seedid]
-		if incircle(self.x, self.y, self.radius()+self.speed(), seed[u"x"], seed[u"y"]):
-			self.mass += seed[u"mass"]
-			del self.glass.seeds[seedid]
+		try:
+			seed = self.glass.seeds[seedid]
+			if incircle(self.x, self.y, self.radius()+self.speed(), seed[u"x"], seed[u"y"]):
+				self.mass += seed[u"mass"]
+				del self.glass.seeds[seedid]
+		except:
+			pass
 	def eatcell(self, cellid):
 		cell = self.glass.cells[cellid]
 		if True: #incircle(self.x, self.y, self.radius(), cell.x, cell.y) & self.mass > cell.mass:

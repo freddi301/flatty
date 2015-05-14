@@ -63,23 +63,33 @@ function Glass(id, player){
 		g.player.direction = mousePositionElementCenter(e);
 	});
 	g.drawCell = function(playerid, delta){
-		var playerWeight = delta/UPDATERATE;
+		var playerWeight = (delta<UPDATERATE?delta:UPDATERATE)/UPDATERATE;
 		var player = g.player.others[playerid];
 		var lastPlayerWeight = 1 - playerWeight;
 		var lastPlayer = g.player.lastOthers[playerid];
 		g.ctx.save();
+		try {
+		var x, y;
 		g.ctx.beginPath();
 			g.ctx.arc(
-				(player.x*playerWeight+lastPlayer.x*lastPlayerWeight),
-				(player.y*playerWeight+lastPlayer.y*lastPlayerWeight),
+				x=(player.x*playerWeight+lastPlayer.x*lastPlayerWeight),
+				y=(player.y*playerWeight+lastPlayer.y*lastPlayerWeight),
 				(player.radius),
 				0,2*Math.PI);
+		g.ctx.fillStyle = "rgba(255,100,100,0.8)";
 		g.ctx.fill();
+		g.ctx.strokeStyle = "rgba(255,100,100,0.9)";
+		g.ctx.lineWidth = 5;
+		g.ctx.stroke();
+		//g.ctx.clip();
+		g.ctx.font = player.radius+"px Arial";
+		g.ctx.fillStyle = "rgb(255,255,255)";
+		g.ctx.fillText(player.name, x-player.radius, y);
+		} catch(e){};
 		g.ctx.restore();
 	}
 	g.drawWorld = function(){
 		g.ctx.save();
-		g.ctx.clearRect(0,0,g.canvas.width, g.canvas.height);
 		var halfglass = g.player.enclojure/2;
 		var delta = new Date().valueOf() - g.player.lastUpdate;
 		if (g.player.me){
@@ -89,13 +99,15 @@ function Glass(id, player){
 				-(g.player.me.x*meWeight+g.player.lastME.x*lastMeWeight-halfglass)+(window.innerWidth/2-halfglass),
 				-(g.player.me.y*meWeight+g.player.lastME.y*lastMeWeight-halfglass)+(window.innerHeight/2-halfglass));
 		}
+		for (var x=-1; x<2; x++) for (var y=-1; y<2; y++) g.ctx.drawImage(g.bg, x*g.bg.naturalWidth, y*g.bg.naturalHeight);
+		g.ctx.strokeStyle = "rgba(255,255,255,0.8)";
+		g.ctx.strokeRect(0,0,g.player.enclojure, g.player.enclojure);
 		for (i in g.player.others){
 			g.drawCell(i, delta);
 		}
 		for (i in g.player.seeds){
 			g.drawSeed(g.player.seeds[i]);
 		}
-		g.ctx.strokeRect(0,0,g.player.enclojure, g.player.enclojure);
 		g.ctx.restore();
 	}
 	g.drawSeed = function(seed){
@@ -109,6 +121,7 @@ function Glass(id, player){
 		g.ctx.fill();
 		g.ctx.restore();
 	}
+	g.bg = new Image(); g.bg.src="bg.jpg";
 	g.animate = function(){
 		g.drawWorld();
 		window.requestAnimationFrame(g.animate);
