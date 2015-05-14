@@ -85,3 +85,19 @@ function normalize(o){
 function incircle(cx, cy, r, x, y){return Math.pow(x - cx, 2) + Math.pow(y - cy, 2) < Math.pow(r,2)}
 
 function area2radius(area){return Math.sqrt(area/Math.PI)}
+
+function mapradius(elems){
+	for (i in elems){
+		elems[i].radius = area2radius(elems[i].mass);
+	}
+}
+
+function cell2speed(cell){
+	return 100/cell.radius;
+}
+
+function mapspeed(elems){
+	for (i in elems){
+		elems[i].speed = cell2speed(elems[i]);
+	}
+}

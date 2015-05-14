@@ -3,9 +3,12 @@ import tornado.web
 import tornado.websocket
 
 import threading
+import random
 import json
 import math
 import time
+
+UPDATERATE = 0.3
 
 def incircle(cx, cy, r, x, y):
 	return pow(x - cx, 2) + pow(y - cy, 2) < pow(r,2)
@@ -25,33 +28,54 @@ class Glass:
 	def __init__(self, radius):
 		self.radius = radius
 		self.cells = {}
-	def newCell(self, token, name, socket):
-		self.cells[token] = Cell(name, socket, self.radius)
+		self.seeds = {}
+	def newCell(self, token, name, socket, cellid):
+		cell = Cell(name, socket, self.radius, token, self, cellid)
+		self.cells[cell.cellid] = cell
 	def computeWorld(self):
 		for cell in self.cells.values():
 			cell.move()
-			self.broadcastWorld()
-		t = threading.Timer(0.3, self.computeWorld)
+		self.seeds.update(self.genSeeds())
+		self.broadcastWorld()
+		t = threading.Timer(UPDATERATE, self.computeWorld)
 		t.start()
 	def processMessage(self, message):
-		if u"token" in message:
-			cell = self.cells[message[u"token"]]
+		if (u"token" in message) & (u"id" in message):
+			cell = self.cells[message[u"id"]]
+			if cell.token != message[u"token"]: return
 			if u"direction" in message:
 				direction = message[u"direction"]
 				cell.direction = normalize((direction[u"x"], direction[u"y"]))
-		else:
-			print("no token in message")
+			elif u"eatseed" in message:
+				cell.eatseed(message[u"eatseed"])
+			elif u"eatcell" in message:
+				cell.eatcell(message[u"eatcell"])
+				
 	def sendWorld(self, cell, world):
-		cell.socket.write_message(world)
+		try:
+			cell.socket.write_message(world)
+		except tornado.websocket.WebSocketClosedError:
+			pass
+			
 	def broadcastWorld(self):
-		world = json.dumps([cell.state() for cell in self.cells.values()])
+		cells = {cell.cellid:cell.state() for cell in self.cells.values()}
+		world = json.dumps({u"cells":cells, u"seeds":self.seeds})
 		for cell in self.cells.values():
 			t = threading.Thread(target=self.sendWorld, args = (cell,world))
 			t.daemon = True
 			t.start()
+			
+	def genSeeds(self):
+		left = 10*len(self.cells)-len(self.seeds)
+		now = str(int(time.time()))
+		return { now+str(i): {
+				 u"x": random.randint(0, self.radius),
+				 u"y": random.randint(0, self.radius),
+				 u"mass": random.randint(5, 25)}
+				for i in range(left)}
 	
 class Cell:
-	def __init__(self, name, socket, enclojure):
+	def __init__(self, name, socket, enclojure, token, glass, cellid):
 		self.name = name
 		self.x = 0
 		self.y = 0
@@ -59,10 +83,13 @@ class Cell:
 		self.direction = (0, 0)
 		self.socket = socket
 		self.enclojure = enclojure
+		self.token = token
+		self.glass = glass
+		self.cellid = cellid
 	def radius(self):
 		return area2radius(self.mass)
 	def speed(self):
-		return 1000/self.mass
+		return 100/self.radius()
 	def move(self):
 		x_direction, y_direction = self.direction
 		speed = self.speed()
@@ -72,6 +99,16 @@ class Cell:
 		if self.y<0: self.y = 0
 		if self.x>self.enclojure: self.x = self.enclojure
 		if self.y>self.enclojure: self.y = self.enclojure
+	def eatseed(self, seedid):
+		seed = self.glass.seeds[seedid]
+		if incircle(self.x, self.y, self.radius()+self.speed(), seed[u"x"], seed[u"y"]):
+			self.mass += seed[u"mass"]
+			del self.glass.seeds[seedid]
+	def eatcell(self, cellid):
+		cell = self.glass.cells[cellid]
+		if True: #incircle(self.x, self.y, self.radius(), cell.x, cell.y) & self.mass > cell.mass:
+			self.mass += cell.mass
+			del self.glass.cells[cellid]
 	def state(self):
 		return {
 			u"name":self.name,
@@ -89,10 +126,11 @@ glass = Glass(512)
 class EchoWebSocket(tornado.websocket.WebSocketHandler):
 	def open(self):
 		global glass
-		token = str(time.time())
+		cellid = str(time.time())
+		token = cellid+str(random.randint(0,99))
 		name = self.get_argument(u"name",u"unnamed")
-		glass.newCell(token, name, self)
-		self.write_message(json.dumps({u"token": token, u"enclojure": glass.radius}))
+		cell = glass.newCell(token, name, self, cellid)
+		self.write_message(json.dumps({u"token": token, u"id": cellid, u"enclojure": glass.radius}))
 
 	def on_message(self, message):
 		mex = json.loads(message)
