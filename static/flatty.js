@@ -11,12 +11,13 @@ function Player(name){
 			p.id = data.id
 			p.enclojure = data.enclojure;
 			p.pullDirection();
+			p.listenCommands();
 		} else {
 			p.lastOthers = p.others || data.cells;
 			p.others = data.cells; mapradius(p.others); mapspeed(p.others);
 			p.seeds = data.seeds; mapradius(p.seeds);
 			p.lastUpdate = new Date().valueOf();
-			p.lastME = p.me || p.others[p.id];
+			p.lastMe = p.me || p.others[p.id];
 			p.me = p.others[p.id];
 			p.eatSeeds();
 			p.eatOthers();
@@ -28,6 +29,7 @@ function Player(name){
 		p.ws.send(JSON.stringify(object));
 	}
 	p.pullDirection = function(){
+		if (p.direction) p.direction.extra = p.extra;
 		p.send({direction: p.direction});
 		setTimeout(p.pullDirection, UPDATERATE);
 	}
@@ -44,6 +46,14 @@ function Player(name){
 				p.send({eatcell: i});
 			}
 		}
+	}
+	p.listenCommands = function(){
+		window.addEventListener("keydown", function(){
+			p.extra = "sprint";
+		});
+		window.addEventListener("keyup", function(){
+			p.extra = null;
+		})
 	}
 	return p;
 }
@@ -90,14 +100,19 @@ function Glass(id, player){
 	}
 	g.drawWorld = function(){
 		g.ctx.save();
+		g.ctx.translate(window.innerWidth/2, window.innerHeight/2);
 		var halfglass = g.player.enclojure/2;
 		var delta = new Date().valueOf() - g.player.lastUpdate;
 		if (g.player.me){
+			var scaleLast = (window.innerHeight*0.1)/(g.player.lastMe.radius*2);
+			var scale = (window.innerHeight*0.1)/(g.player.me.radius*2);
 			var meWeight = delta/UPDATERATE;
 			var lastMeWeight = 1 - meWeight;
+			var smoothscale;
+			g.ctx.scale(smoothscale=scale*meWeight+scaleLast*lastMeWeight,smoothscale);
 			g.ctx.translate(
-				-(g.player.me.x*meWeight+g.player.lastME.x*lastMeWeight-halfglass)+(window.innerWidth/2-halfglass),
-				-(g.player.me.y*meWeight+g.player.lastME.y*lastMeWeight-halfglass)+(window.innerHeight/2-halfglass));
+				-(g.player.me.x*meWeight+g.player.lastMe.x*lastMeWeight-halfglass)+(-halfglass),
+				-(g.player.me.y*meWeight+g.player.lastMe.y*lastMeWeight-halfglass)+(-halfglass));
 		}
 		for (var x=-1; x<2; x++) for (var y=-1; y<2; y++) g.ctx.drawImage(g.bg, x*g.bg.naturalWidth, y*g.bg.naturalHeight);
 		g.ctx.strokeStyle = "rgba(255,255,255,0.8)";

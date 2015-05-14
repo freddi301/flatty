@@ -29,9 +29,11 @@ class Glass:
 		self.radius = radius
 		self.cells = {}
 		self.seeds = {}
+		self.cellsLock = threading.RLock();
 	def newCell(self, token, name, socket, cellid):
 		cell = Cell(name, socket, self.radius, token, self, cellid)
-		self.cells[cell.cellid] = cell
+		with self.cellsLock:
+			self.cells[cell.cellid] = cell
 	def computeWorld(self):
 		for cell in self.cells.values():
 			cell.move()
@@ -47,6 +49,9 @@ class Glass:
 				if u"direction" in message:
 					direction = message[u"direction"]
 					cell.direction = normalize((direction[u"x"], direction[u"y"]))
+					if u"extra" in message[u"direction"]:
+						if message[u"direction"][u"extra"] == u"sprint":
+							cell.sprint = True
 				elif u"eatseed" in message:
 					cell.eatseed(message[u"eatseed"])
 				elif u"eatcell" in message:
@@ -63,10 +68,11 @@ class Glass:
 	def broadcastWorld(self):
 		cells = {cell.cellid:cell.state() for cell in self.cells.values()}
 		world = json.dumps({u"cells":cells, u"seeds":self.seeds})
-		for cell in self.cells.values():
-			t = threading.Thread(target=self.sendWorld, args = (cell,world))
-			t.daemon = True
-			t.start()
+		with self.cellsLock:
+			for cell in self.cells.values():
+				t = threading.Thread(target=self.sendWorld, args = (cell,world))
+				t.daemon = True
+				t.start()
 			
 	def genSeeds(self):
 		left = 10*len(self.cells)-len(self.seeds)
@@ -89,6 +95,7 @@ class Cell:
 		self.token = token
 		self.glass = glass
 		self.cellid = cellid
+		self.sprint = False
 	def radius(self):
 		return area2radius(self.mass)
 	def speed(self):
@@ -96,6 +103,10 @@ class Cell:
 	def move(self):
 		x_direction, y_direction = self.direction
 		speed = self.speed()
+		if self.sprint and self.mass>100:
+			speed = 10+self.speed()+self.radius()
+			self.mass = self.mass*0.9 - 10
+			self.sprint = False
 		self.x += x_direction * speed
 		self.y += y_direction * speed
 		if self.x<0: self.x = 0
@@ -114,7 +125,8 @@ class Cell:
 		cell = self.glass.cells[cellid]
 		if True: #incircle(self.x, self.y, self.radius(), cell.x, cell.y) & self.mass > cell.mass:
 			self.mass += cell.mass
-			del self.glass.cells[cellid]
+			with self.glass.cellsLock:
+				del self.glass.cells[cellid]
 	def state(self):
 		return {
 			u"name":self.name,
