@@ -1,9 +1,9 @@
 var UPDATERATE = 300;
 
-function Player(name){
+function Player(name, color){
 	var p = {};
 	p.name = name;
-	p.ws = new WebSocket("ws://"+location.host+"/websocket?name="+name);
+	p.ws = new WebSocket("ws://"+location.host+"/websocket?name="+name+"&color="+color);
 	p.ws.onmessage = function (e) {
 		var data = JSON.parse(e.data);
 		if ("token" in data){
@@ -30,7 +30,10 @@ function Player(name){
 		p.ws.send(JSON.stringify(object));
 	}
 	p.pullDirection = function(){
-		if (p.direction) p.direction.extra = p.extra;
+		if (p.direction) {
+			p.direction.extra = p.extra;
+			p.extra = null;
+		}
 		p.send({direction: p.direction});
 		setTimeout(p.pullDirection, UPDATERATE);
 	}
@@ -53,7 +56,7 @@ function Player(name){
 			p.extra = "sprint";
 		});
 		window.addEventListener("keyup", function(){
-			p.extra = null;
+			//p.extra = null;
 		})
 	}
 	return p;
@@ -87,20 +90,24 @@ function Glass(id, player){
 				y=(player.y*playerWeight+lastPlayer.y*lastPlayerWeight),
 				(player.radius),
 				0,2*Math.PI);
-		g.ctx.fillStyle = "rgba(255,100,100,0.8)";
+		g.ctx.globalAlpha=0.8;
+		g.ctx.fillStyle = "#"+player.color;
 		g.ctx.fill();
-		g.ctx.strokeStyle = "rgba(255,100,100,0.9)";
+		//g.ctx.clip();
+		g.ctx.globalAlpha=0.9;
+		g.ctx.strokeStyle = "#"+player.color;
 		g.ctx.lineWidth = 5;
 		g.ctx.stroke();
-		//g.ctx.clip();
 		g.ctx.font = player.radius+"px Arial";
 		g.ctx.fillStyle = "rgb(255,255,255)";
-		g.ctx.fillText(player.name, x-player.radius, y);
+		g.ctx.fillText(player.name, x-player.radius, y+player.radius/2);
 		} catch(e){};
 		g.ctx.restore();
 	}
 	g.drawWorld = function(){
 		g.ctx.save();
+		g.ctx.fillStyle = "rgba(0,0,0.5)";
+		g.ctx.fillRect(0,0,window.innerWidth, window.innerHeight);
 		g.ctx.translate(window.innerWidth/2, window.innerHeight/2);
 		var halfglass = g.player.enclojure/2;
 		var delta = new Date().valueOf() - g.player.lastUpdate;
@@ -115,9 +122,19 @@ function Glass(id, player){
 				-(g.player.me.x*meWeight+g.player.lastMe.x*lastMeWeight-halfglass)+(-halfglass),
 				-(g.player.me.y*meWeight+g.player.lastMe.y*lastMeWeight-halfglass)+(-halfglass));
 		}
-		for (var x=-1; x<2; x++) for (var y=-1; y<2; y++) g.ctx.drawImage(g.bg, x*g.bg.naturalWidth, y*g.bg.naturalHeight);
-		g.ctx.strokeStyle = "rgba(255,255,255,0.8)";
-		g.ctx.strokeRect(0,0,g.player.enclojure, g.player.enclojure);
+		g.ctx.save();
+			g.ctx.strokeStyle = "rgb(255,255,255)";
+			g.ctx.lineWidth = 0.1;
+			for (var x = 0; x<g.player.enclojure; x+=10){
+				g.ctx.moveTo(x,0);
+				g.ctx.lineTo(x,g.player.enclojure);
+			}
+			for (var y = 0; y<g.player.enclojure; y+=10){
+				g.ctx.moveTo(0,y);
+				g.ctx.lineTo(g.player.enclojure, y);
+			}
+			g.ctx.stroke();
+		g.ctx.restore();
 		for (i in g.player.others){
 			g.drawCell(i, delta);
 		}
@@ -134,10 +151,13 @@ function Glass(id, player){
 				(seed.y),
 				area2radius(seed.mass),
 				0,2*Math.PI);
+		g.ctx.fillStyle = seed.color;
 		g.ctx.fill();
+		g.ctx.lineWidth = 0.4;
+		g.ctx.strokeStyle = "rgba(255,255,255,0.8)";
+		g.ctx.stroke();
 		g.ctx.restore();
 	}
-	g.bg = new Image(); g.bg.src="bg.jpg";
 	g.animate = function(){
 		g.drawWorld();
 		window.requestAnimationFrame(g.animate);
@@ -148,7 +168,8 @@ function Glass(id, player){
 
 function init(){
 	var nickname = prompt("nickname");
-	p = Player(nickname);
+	var color = prompt("color RRGGBB"); color = color || "00FF00";
+	p = Player(nickname, color);
 	g = Glass("glass", p);
 	initGui(g);
 }

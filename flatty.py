@@ -30,8 +30,8 @@ class Glass:
 		self.cells = {}
 		self.seeds = {}
 		self.cellsLock = threading.RLock();
-	def newCell(self, token, name, socket, cellid):
-		cell = Cell(name, socket, self.radius, token, self, cellid)
+	def newCell(self, token, name, socket, cellid, color):
+		cell = Cell(name, socket, self.radius, token, self, cellid, color)
 		with self.cellsLock:
 			self.cells[cell.cellid] = cell
 	def computeWorld(self):
@@ -78,13 +78,14 @@ class Glass:
 		left = 10*len(self.cells)-len(self.seeds)
 		now = str(int(time.time()))
 		return { now+str(i): {
-				 u"x": random.randint(0, self.radius),
-				 u"y": random.randint(0, self.radius),
-				 u"mass": random.randint(5, 25)}
+				u"x": random.randint(0, self.radius),
+				u"y": random.randint(0, self.radius),
+				u"mass": random.randint(5, 25),
+				u"color": ("rgba(%d,%d,%d,0.8)" % (random.randint(0,2)*127,random.randint(0,2)*127,random.randint(0,2)*127)), }
 				for i in range(left)}
 	
 class Cell:
-	def __init__(self, name, socket, enclojure, token, glass, cellid):
+	def __init__(self, name, socket, enclojure, token, glass, cellid, color):
 		self.name = name
 		self.x = random.randint(0, glass.radius)
 		self.y = random.randint(0, glass.radius)
@@ -96,6 +97,7 @@ class Cell:
 		self.glass = glass
 		self.cellid = cellid
 		self.sprint = False
+		self.color = color
 	def radius(self):
 		return area2radius(self.mass)
 	def speed(self):
@@ -103,6 +105,8 @@ class Cell:
 	def move(self):
 		x_direction, y_direction = self.direction
 		speed = self.speed()
+		if self.mass>1000:
+			self.mass -= 1;
 		if self.sprint and self.mass>100:
 			speed = 10+self.speed()+self.radius()
 			self.mass = self.mass*0.9 - 10
@@ -136,10 +140,11 @@ class Cell:
 			u"direction": {
 				u"x": int(self.direction[0]),
 				u"y": int(self.direction[1]),
-			}
+			},
+			u"color": self.color,
 		}
 
-glass = Glass(512)
+glass = Glass(1024)
 		
 class EchoWebSocket(tornado.websocket.WebSocketHandler):
 	def open(self):
@@ -147,7 +152,8 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		cellid = str(time.time())
 		token = cellid+str(random.randint(0,99))
 		name = self.get_argument(u"name",u"unnamed")
-		cell = glass.newCell(token, name, self, cellid)
+		color = self.get_argument(u"color",u"#00FF00")
+		cell = glass.newCell(token, name[0:10], self, cellid, color[0:7])
 		self.write_message(json.dumps({u"token": token, u"id": cellid, u"enclojure": glass.radius, u"updaterate":UPDATERATE*1000}))
 
 	def on_message(self, message):
