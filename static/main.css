@@ -1,3 +1,11 @@
 body {
 	margin: 0px;
 }
+
+.ranking {
+	position: fixed;
+	top: 10px;
+	right: 10px;
+	background: rgba(255,255,255,0.5);
+	max-width: 30%;
+}

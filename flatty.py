@@ -130,12 +130,12 @@ class Cell:
 	def state(self):
 		return {
 			u"name":self.name,
-			u"x":self.x,
-			u"y":self.y,
-			u"mass":self.mass,
+			u"x":int(self.x),
+			u"y":int(self.y),
+			u"mass":int(self.mass),
 			u"direction": {
-				u"x": self.direction[0],
-				u"y": self.direction[1],
+				u"x": int(self.direction[0]),
+				u"y": int(self.direction[1]),
 			}
 		}
 
@@ -148,7 +148,7 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		token = cellid+str(random.randint(0,99))
 		name = self.get_argument(u"name",u"unnamed")
 		cell = glass.newCell(token, name, self, cellid)
-		self.write_message(json.dumps({u"token": token, u"id": cellid, u"enclojure": glass.radius}))
+		self.write_message(json.dumps({u"token": token, u"id": cellid, u"enclojure": glass.radius, u"updaterate":UPDATERATE*1000}))
 
 	def on_message(self, message):
 		mex = json.loads(message)

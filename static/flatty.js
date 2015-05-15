@@ -10,6 +10,7 @@ function Player(name){
 			p.token = data.token;
 			p.id = data.id
 			p.enclojure = data.enclojure;
+			UPDATERATE = data.updaterate;
 			p.pullDirection();
 			p.listenCommands();
 		} else {
@@ -149,4 +150,5 @@ function init(){
 	var nickname = prompt("nickname");
 	p = Player(nickname);
 	g = Glass("glass", p);
+	initGui(g);
 }
