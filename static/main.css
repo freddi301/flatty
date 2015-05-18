@@ -20,3 +20,14 @@ body {
 .commandHelp p {
 	margin: 1em;
 }
+
+#login {
+	border-radius: 10%;
+	position: fixed;
+	top: 10%;
+	width: 50%;
+	left: 25%;
+	padding: 10px;
+	background: rgba(240,255,240, 0.8);
+	align-content: center;
+}

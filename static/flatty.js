@@ -66,7 +66,7 @@ function Player(name, color){
 		window.addEventListener("keydown", function(e){
 			var c = String.fromCharCode(e.keyCode);
 			if (c==" ") p.extra = "sprint";
-			else if (c=="E") p.extra = "mine";
+			else if (c=="V") p.extra = "mine";
 			else if (c=="R") p.extra = "immaterial";
 			else if (c=="T") p.extra = "invisible";
 			else if (c=="B") p.extra = "blink"
@@ -106,7 +106,7 @@ function Glass(id, player){
 				y=(player.y*playerWeight+lastPlayer.y*lastPlayerWeight),
 				(player.radius),
 				0,2*Math.PI);
-		g.ctx.globalAlpha=player.alpha;
+		g.ctx.globalAlpha=player.alpha*0.8;
 		g.ctx.fillStyle = "#"+player.color;
 		g.ctx.fill();
 		//g.ctx.clip();
@@ -198,9 +198,15 @@ function Glass(id, player){
 }
 
 function init(){
-	var nickname = prompt("nickname");
-	var color = prompt("color RRGGBB"); color = color || "00FF00";
-	p = Player(nickname, color);
+	$("#nickname").val(getCookie("nickname"));
+	$("#color").val(getCookie("color"));
+}
+
+function play(){
+	$("#login").fadeOut();
+	document.cookie="nickname="+$("#nickname").val();
+	document.cookie="color="+$("#color").val();
+	p = Player($("#nickname").val(), $("#color").val().substr(1));
 	g = Glass("glass", p);
 	initGui(g);
 }

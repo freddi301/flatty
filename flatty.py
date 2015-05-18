@@ -105,7 +105,7 @@ class Cell:
 		self.name = name
 		self.x = random.randint(0, glass.radius)
 		self.y = random.randint(0, glass.radius)
-		self.mass = 5000
+		self.mass = 100
 		self.direction = (0, 0)
 		self.socket = socket
 		self.enclojure = enclojure
@@ -129,9 +129,9 @@ class Cell:
 			self.mass = self.mass*0.9 - 10
 			self.sprint = False
 		if self.immaterial:
-			self.mass -= 20
+			self.mass = self.mass*0.98 - 20
 		if self.invisible:
-			self.mass -= 20
+			self.mass = self.mass*0.95 - 20
 		if self.blink:
 			self.blink = False
 			if self.mass > 1100:
