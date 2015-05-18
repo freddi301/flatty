@@ -3,6 +3,7 @@ import tornado.web
 import tornado.websocket
 
 import threading
+import traceback
 import random
 import json
 import math
@@ -30,6 +31,7 @@ class Glass:
 		self.cells = {}
 		self.seeds = {}
 		self.cellsLock = threading.RLock();
+		self.mines = {}
 	def newCell(self, token, name, socket, cellid, color):
 		cell = Cell(name, socket, self.radius, token, self, cellid, color)
 		with self.cellsLock:
@@ -42,7 +44,7 @@ class Glass:
 		t = threading.Timer(UPDATERATE, self.computeWorld)
 		t.start()
 	def processMessage(self, message):
-		if (u"token" in message) & (u"id" in message):
+		if (u"token" in message) and (u"id" in message):
 			try:
 				cell = self.cells[message[u"id"]]
 				if cell.token != message[u"token"]: return
@@ -52,12 +54,16 @@ class Glass:
 					if u"extra" in message[u"direction"]:
 						if message[u"direction"][u"extra"] == u"sprint":
 							cell.sprint = True
+						elif message[u"direction"][u"extra"] == u"mine":
+							cell.spawnMine()
 				elif u"eatseed" in message:
 					cell.eatseed(message[u"eatseed"])
 				elif u"eatcell" in message:
 					cell.eatcell(message[u"eatcell"])
+				elif u"minecell" in message:
+					cell.minecell(message[u"minecell"])
 			except:
-				pass
+				traceback.print_exc()
 				
 	def sendWorld(self, cell, world):
 		try:
@@ -67,7 +73,7 @@ class Glass:
 			
 	def broadcastWorld(self):
 		cells = {cell.cellid:cell.state() for cell in self.cells.values()}
-		world = json.dumps({u"cells":cells, u"seeds":self.seeds})
+		world = json.dumps({u"cells":cells, u"seeds":self.seeds, u"mines":self.mines})
 		with self.cellsLock:
 			for cell in self.cells.values():
 				t = threading.Thread(target=self.sendWorld, args = (cell,world))
@@ -127,10 +133,22 @@ class Cell:
 			pass
 	def eatcell(self, cellid):
 		cell = self.glass.cells[cellid]
-		if True: #incircle(self.x, self.y, self.radius(), cell.x, cell.y) & self.mass > cell.mass:
+		if incircle(self.x, self.y, self.radius()+self.speed(), cell.x, cell.y) and self.mass > cell.mass*1.1:
 			self.mass += cell.mass
 			with self.glass.cellsLock:
 				del self.glass.cells[cellid]
+	def spawnMine(self):
+		if True: #self.mass>600
+			#self.mass -= 500
+			self.glass.mines[self.cellid] = {u"x": self.x-self.direction[0]*self.radius(), u"y":self.y-self.direction[1]*self.radius()}
+	def minecell(self, cellid):
+		cell = self.glass.cells[cellid]
+		mine = self.glass.mines[self.cellid]
+		if incircle(mine[u"x"], mine[u"y"], 4+cell.radius(), cell.x, cell.y):
+			cell.mass = cell.mass/2
+			if cell.mass<100:
+				with self.glass.cellsLock:
+					del self.glass.cells[cellid]
 	def state(self):
 		return {
 			u"name":self.name,

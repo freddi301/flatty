@@ -13,15 +13,17 @@ function Player(name, color){
 			UPDATERATE = data.updaterate;
 			p.pullDirection();
 			p.listenCommands();
-		} else {
+		} else { console.log(data)
 			p.lastOthers = p.others || data.cells;
 			p.others = data.cells; mapradius(p.others); mapspeed(p.others);
 			p.seeds = data.seeds; mapradius(p.seeds);
 			p.lastUpdate = new Date().valueOf();
 			p.lastMe = p.me || p.others[p.id];
 			p.me = p.others[p.id];
+			p.mines = data.mines;
 			p.eatSeeds();
 			p.eatOthers();
+			p.mineOthers();
 		}
 	}
 	p.send = function(object){
@@ -48,6 +50,14 @@ function Player(name, color){
 		for (i in p.others){
 			if (incircle(p.me.x, p.me.y, p.me.radius, p.others[i].x, p.others[i].y) & p.me.mass > p.others[i].mass*1.1){
 				p.send({eatcell: i});
+			}
+		}
+	}
+	p.mineOthers = function(){
+		var mine = p.mines[p.id]; console.log(mine);
+		for (i in p.others){
+			if (incircle(mine.x, mine.y, 4+p.others[i].radius, p.others[i].x, p.others[i].y)){
+				p.send({minecell: i});
 			}
 		}
 	}
@@ -143,6 +153,9 @@ function Glass(id, player){
 		for (i in g.player.seeds){
 			g.drawSeed(g.player.seeds[i]);
 		}
+		for (i in g.player.mines){
+			g.drawMine(g.player.mines[i]);
+		}
 		g.ctx.restore();
 	}
 	g.drawSeed = function(seed){
@@ -157,6 +170,19 @@ function Glass(id, player){
 		g.ctx.fill();
 		g.ctx.lineWidth = 0.4;
 		g.ctx.strokeStyle = "rgba(255,255,255,0.8)";
+		g.ctx.stroke();
+		g.ctx.restore();
+	}
+	g.drawMine = function(mine){
+		g.ctx.save();
+		g.ctx.translate(mine.x, mine.y);
+		g.ctx.beginPath();
+			g.ctx.moveTo(0,-4);
+			g.ctx.lineTo(4,0);
+			g.ctx.lineTo(0,4);
+			g.ctx.lineTo(-4,0);
+			g.ctx.lineTo(0,-4);
+		g.ctx.strokeStyle = "white";
 		g.ctx.stroke();
 		g.ctx.restore();
 	}

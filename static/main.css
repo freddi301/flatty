@@ -9,3 +9,14 @@ body {
 	background: rgba(255,255,255,0.5);
 	max-width: 30%;
 }
+
+.commandHelp {
+	position: fixed;
+	bottom: 10px;
+	left: 10px;
+	background: rgba(255,255,255,0.5);
+	max-width: 30%;
+}
+.commandHelp p {
+	margin: 1em;
+}

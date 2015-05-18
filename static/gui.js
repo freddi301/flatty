@@ -1,4 +1,4 @@
-function initGui(g){
+function initRanking(g){
 	var table = $("<table>").addClass("ranking").appendTo("body");
 	var update = function(){
 		table.empty();
@@ -18,4 +18,8 @@ function initGui(g){
 	}
 	update();
 	setInterval(update, 5000);
+}
+
+function initGui(g){
+	initRanking(g);
 }
