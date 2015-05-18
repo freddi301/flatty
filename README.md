@@ -6,9 +6,13 @@ You need:
 - pip install tornado
 
 then execute:
+
 python flatty.py
 
+
 join the game on:
+
 localhost/flatty.html
+
 
 give your ip to your friends on LAN :)
