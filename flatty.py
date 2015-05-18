@@ -138,8 +138,8 @@ class Cell:
 			with self.glass.cellsLock:
 				del self.glass.cells[cellid]
 	def spawnMine(self):
-		if True: #self.mass>600
-			#self.mass -= 500
+		if self.mass>1000
+			self.mass -= 500
 			self.glass.mines[self.cellid] = {u"x": self.x-self.direction[0]*self.radius(), u"y":self.y-self.direction[1]*self.radius()}
 	def minecell(self, cellid):
 		cell = self.glass.cells[cellid]
