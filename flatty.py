@@ -54,8 +54,18 @@ class Glass:
 					if u"extra" in message[u"direction"]:
 						if message[u"direction"][u"extra"] == u"sprint":
 							cell.sprint = True
+						elif message[u"direction"][u"extra"] == u"immaterial":
+							if cell.mass > 500: cell.immaterial = True
+						elif message[u"direction"][u"extra"] == u"invisible":
+							if cell.mass > 500: cell.invisible = True
 						elif message[u"direction"][u"extra"] == u"mine":
 							cell.spawnMine()
+						elif message[u"direction"][u"extra"] == u"blink":
+							cell.blink = True
+						else:
+							cell.invisible = False
+							cell.immaterial = False
+							
 				elif u"eatseed" in message:
 					cell.eatseed(message[u"eatseed"])
 				elif u"eatcell" in message:
@@ -81,12 +91,12 @@ class Glass:
 				t.start()
 			
 	def genSeeds(self):
-		left = 10*len(self.cells)-len(self.seeds)
+		left = 20*len(self.cells)-len(self.seeds)
 		now = str(int(time.time()))
 		return { now+str(i): {
 				u"x": random.randint(0, self.radius),
 				u"y": random.randint(0, self.radius),
-				u"mass": random.randint(5, 25),
+				u"mass": random.randint(20, 50),
 				u"color": ("rgba(%d,%d,%d,0.8)" % (random.randint(0,2)*127,random.randint(0,2)*127,random.randint(0,2)*127)), }
 				for i in range(left)}
 	
@@ -95,7 +105,7 @@ class Cell:
 		self.name = name
 		self.x = random.randint(0, glass.radius)
 		self.y = random.randint(0, glass.radius)
-		self.mass = 100
+		self.mass = 5000
 		self.direction = (0, 0)
 		self.socket = socket
 		self.enclojure = enclojure
@@ -104,19 +114,30 @@ class Cell:
 		self.cellid = cellid
 		self.sprint = False
 		self.color = color
+		self.immaterial = False
+		self.invisible = False
+		self.blink = False
 	def radius(self):
 		return area2radius(self.mass)
 	def speed(self):
-		return 100/self.radius()
+		return 100/math.sqrt(self.radius())
 	def move(self):
 		x_direction, y_direction = self.direction
 		speed = self.speed()
-		if self.mass>1000:
-			self.mass -= 1;
 		if self.sprint and self.mass>100:
 			speed = 10+self.speed()+self.radius()
 			self.mass = self.mass*0.9 - 10
 			self.sprint = False
+		if self.immaterial:
+			self.mass -= 20
+		if self.invisible:
+			self.mass -= 20
+		if self.blink:
+			self.blink = False
+			if self.mass > 1100:
+				self.x = random.randint(0, glass.radius)
+				self.y = random.randint(0, glass.radius)
+				self.mass -= 1000
 		self.x += x_direction * speed
 		self.y += y_direction * speed
 		if self.x<0: self.x = 0
@@ -126,14 +147,14 @@ class Cell:
 	def eatseed(self, seedid):
 		try:
 			seed = self.glass.seeds[seedid]
-			if incircle(self.x, self.y, self.radius()+self.speed(), seed[u"x"], seed[u"y"]):
+			if incircle(self.x, self.y, self.radius()+self.speed(), seed[u"x"], seed[u"y"]) and not self.immaterial:
 				self.mass += seed[u"mass"]
 				del self.glass.seeds[seedid]
 		except:
 			pass
 	def eatcell(self, cellid):
 		cell = self.glass.cells[cellid]
-		if incircle(self.x, self.y, self.radius()+self.speed(), cell.x, cell.y) and self.mass > cell.mass*1.1:
+		if incircle(self.x, self.y, self.radius()+self.speed(), cell.x, cell.y) and self.mass > cell.mass*1.1 and not self.immaterial and not cell.immaterial:
 			self.mass += cell.mass
 			with self.glass.cellsLock:
 				del self.glass.cells[cellid]
@@ -144,14 +165,14 @@ class Cell:
 	def minecell(self, cellid):
 		cell = self.glass.cells[cellid]
 		mine = self.glass.mines[self.cellid]
-		if incircle(mine[u"x"], mine[u"y"], 4+cell.radius(), cell.x, cell.y):
+		if incircle(mine[u"x"], mine[u"y"], 4+cell.radius(), cell.x, cell.y) and not cell.immaterial:
 			cell.mass = cell.mass/2
 			del self.glass.mines[self.cellid]
 			if cell.mass<100:
 				with self.glass.cellsLock:
 					del self.glass.cells[cellid]
 	def state(self):
-		return {
+		ret = {
 			u"name":self.name,
 			u"x":int(self.x),
 			u"y":int(self.y),
@@ -161,7 +182,9 @@ class Cell:
 				u"y": int(self.direction[1]),
 			},
 			u"color": self.color,
+			u"alpha": 0 if self.invisible else 0.5 if self.immaterial else 1,
 		}
+		return ret
 
 glass = Glass(1024)
 		

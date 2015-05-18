@@ -13,7 +13,7 @@ function Player(name, color){
 			UPDATERATE = data.updaterate;
 			p.pullDirection();
 			p.listenCommands();
-		} else { console.log(data)
+		} else {
 			p.lastOthers = p.others || data.cells;
 			p.others = data.cells; mapradius(p.others); mapspeed(p.others);
 			p.seeds = data.seeds; mapradius(p.seeds);
@@ -54,7 +54,8 @@ function Player(name, color){
 		}
 	}
 	p.mineOthers = function(){
-		var mine = p.mines[p.id]; console.log(mine);
+		var mine = p.mines[p.id];
+		if (!mine) return;
 		for (i in p.others){
 			if (incircle(mine.x, mine.y, 4+p.others[i].radius, p.others[i].x, p.others[i].y)){
 				p.send({minecell: i});
@@ -66,6 +67,9 @@ function Player(name, color){
 			var c = String.fromCharCode(e.keyCode);
 			if (c==" ") p.extra = "sprint";
 			else if (c=="E") p.extra = "mine";
+			else if (c=="R") p.extra = "immaterial";
+			else if (c=="T") p.extra = "invisible";
+			else if (c=="B") p.extra = "blink"
 		});
 		window.addEventListener("keyup", function(){
 			//p.extra = null;
@@ -102,13 +106,12 @@ function Glass(id, player){
 				y=(player.y*playerWeight+lastPlayer.y*lastPlayerWeight),
 				(player.radius),
 				0,2*Math.PI);
-		g.ctx.globalAlpha=0.8;
+		g.ctx.globalAlpha=player.alpha;
 		g.ctx.fillStyle = "#"+player.color;
 		g.ctx.fill();
 		//g.ctx.clip();
-		g.ctx.globalAlpha=0.9;
-		g.ctx.strokeStyle = "#"+player.color;
-		g.ctx.lineWidth = 5;
+		g.ctx.strokeStyle = "white";
+		g.ctx.lineWidth = 1;
 		g.ctx.stroke();
 		g.ctx.font = player.radius+"px Arial";
 		g.ctx.fillStyle = "rgb(255,255,255)";
