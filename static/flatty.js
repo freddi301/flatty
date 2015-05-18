@@ -52,8 +52,10 @@ function Player(name, color){
 		}
 	}
 	p.listenCommands = function(){
-		window.addEventListener("keydown", function(){
-			p.extra = "sprint";
+		window.addEventListener("keydown", function(e){
+			var c = String.fromCharCode(e.keyCode);
+			if (c==" ") p.extra = "sprint";
+			else if (c=="E") p.extra = "mine";
 		});
 		window.addEventListener("keyup", function(){
 			//p.extra = null;
