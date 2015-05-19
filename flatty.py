@@ -52,15 +52,18 @@ class Glass:
 					direction = message[u"direction"]
 					cell.direction = normalize((direction[u"x"], direction[u"y"]))
 					if u"extra" in message[u"direction"]:
-						if message[u"direction"][u"extra"] == u"sprint":
+						extra = message[u"direction"][u"extra"]
+						if extra == u"sprint":
 							cell.sprint = True
-						elif message[u"direction"][u"extra"] == u"immaterial":
+						elif extra == u"eject":
+							cell.eject = True
+						elif extra == u"immaterial":
 							if cell.mass > 500: cell.immaterial = True
-						elif message[u"direction"][u"extra"] == u"invisible":
+						elif extra == u"invisible":
 							if cell.mass > 500: cell.invisible = True
-						elif message[u"direction"][u"extra"] == u"mine":
+						elif extra == u"mine":
 							cell.spawnMine()
-						elif message[u"direction"][u"extra"] == u"blink":
+						elif extra == u"blink":
 							cell.blink = True
 						else:
 							cell.invisible = False
@@ -105,7 +108,7 @@ class Cell:
 		self.name = name
 		self.x = random.randint(0, glass.radius)
 		self.y = random.randint(0, glass.radius)
-		self.mass = 100
+		self.mass = 5000
 		self.direction = (0, 0)
 		self.socket = socket
 		self.enclojure = enclojure
@@ -117,6 +120,7 @@ class Cell:
 		self.immaterial = False
 		self.invisible = False
 		self.blink = False
+		self.eject = False
 	def radius(self):
 		return area2radius(self.mass)
 	def speed(self):
@@ -138,6 +142,16 @@ class Cell:
 				self.x = random.randint(0, glass.radius)
 				self.y = random.randint(0, glass.radius)
 				self.mass -= 1000
+		if self.eject:
+			self.eject = False
+			if self.mass > 200:
+				self.mass -= 100
+				now = str(time.time())
+				self.glass.seeds[now] = {
+					u"x": self.x + self.speed()*10*self.direction[0],
+					u"y": self.y + self.speed()*10*self.direction[1],
+					u"mass": 100,
+					u"color": "#"+self.color }
 		self.x += x_direction * speed
 		self.y += y_direction * speed
 		if self.x<0: self.x = 0

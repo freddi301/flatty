@@ -66,10 +66,11 @@ function Player(name, color){
 		window.addEventListener("keydown", function(e){
 			var c = String.fromCharCode(e.keyCode);
 			if (c==" ") p.extra = "sprint";
-			else if (c=="V") p.extra = "mine";
+			else if (c=="E") p.extra = "eject";
 			else if (c=="R") p.extra = "immaterial";
 			else if (c=="T") p.extra = "invisible";
-			else if (c=="B") p.extra = "blink"
+			else if (c=="V") p.extra = "mine";
+			else if (c=="B") p.extra = "blink";
 		});
 		window.addEventListener("keyup", function(){
 			//p.extra = null;
