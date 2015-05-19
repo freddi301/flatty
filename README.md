@@ -10,3 +10,5 @@ start the server: **python flatty.py**
 join the game on: **localhost/flatty.html**
 
 give your ip to your friends on LAN :)
+
+![Screen](https://raw.githubusercontent.com/freddi301/flatty/master/screen.png)
