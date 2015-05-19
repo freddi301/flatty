@@ -9,6 +9,9 @@ body {
 	background: rgba(255,255,255,0.5);
 	max-width: 30%;
 }
+.ranking td {
+	-webkit-animation: appear 1s;
+}
 
 .commandHelp {
 	position: fixed;
@@ -16,6 +19,12 @@ body {
 	left: 10px;
 	background: rgba(255,255,255,0.5);
 	max-width: 30%;
+	max-height: 0px;
+	overflow: hidden;
+	transition: max-height 4s;
+}
+.commandHelp.show {
+	max-height: 50%;
 }
 .commandHelp p {
 	margin: 1em;
@@ -46,4 +55,16 @@ body {
 }
 #flattylog * {
 	margin: 0.5em;
+	-webkit-animation: appear 2s;
+}
+
+@-webkit-keyframes appear {
+	from {
+		height: 0em;
+		opacity: 0;
+	}
+	to {
+		height: 1em;
+		opacity: 1;
+	}
 }

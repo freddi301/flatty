@@ -27,6 +27,7 @@ function initLog(){
 function initGui(g){
 	initRanking(g);
 	initLog();
+	$(".commandHelp").addClass("show");
 }
 
 function flattyLog(text){
