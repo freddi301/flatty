@@ -9,7 +9,7 @@ import json
 import math
 import time
 
-UPDATERATE = 0.3
+UPDATERATE = 0.2
 
 def incircle(cx, cy, r, x, y):
 	return pow(x - cx, 2) + pow(y - cy, 2) < pow(r,2)
@@ -108,7 +108,7 @@ class Cell:
 		self.name = name
 		self.x = random.randint(0, glass.radius)
 		self.y = random.randint(0, glass.radius)
-		self.mass = 5000
+		self.mass = 100
 		self.direction = (0, 0)
 		self.socket = socket
 		self.enclojure = enclojure
@@ -124,7 +124,7 @@ class Cell:
 	def radius(self):
 		return area2radius(self.mass)
 	def speed(self):
-		return 100/math.sqrt(self.radius())
+		return (10/UPDATERATE)/math.sqrt(self.radius())
 	def move(self):
 		x_direction, y_direction = self.direction
 		speed = self.speed()
