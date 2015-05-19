@@ -12,7 +12,7 @@ body {
 
 .commandHelp {
 	position: fixed;
-	bottom: 10px;
+	top: 10px;
 	left: 10px;
 	background: rgba(255,255,255,0.5);
 	max-width: 30%;
@@ -30,4 +30,20 @@ body {
 	padding: 10px;
 	background: rgba(240,255,240, 0.8);
 	align-content: center;
+}
+
+#flattylog::-webkit-scrollbar {
+    display: none;
+}
+#flattylog {
+	position: fixed;
+	bottom: 10px;
+	left: 10px;
+	max-height: 20%;
+	max-width: 30%;
+	overflow-y: scroll;
+	color: white;
+}
+#flattylog * {
+	margin: 0.5em;
 }

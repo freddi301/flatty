@@ -13,6 +13,8 @@ function Player(name, color){
 			UPDATERATE = data.updaterate;
 			p.pullDirection();
 			p.listenCommands();
+		} else if ("log" in data) {
+			flattyLog(data.log);
 		} else {
 			p.lastOthers = p.others || data.cells;
 			p.others = data.cells; mapradius(p.others); mapspeed(p.others);

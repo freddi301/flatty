@@ -68,7 +68,7 @@ class Glass:
 						else:
 							cell.invisible = False
 							cell.immaterial = False
-							
+
 				elif u"eatseed" in message:
 					cell.eatseed(message[u"eatseed"])
 				elif u"eatcell" in message:
@@ -77,13 +77,13 @@ class Glass:
 					cell.minecell(message[u"minecell"])
 			except:
 				traceback.print_exc()
-				
+
 	def sendWorld(self, cell, world):
 		try:
 			cell.socket.write_message(world)
 		except tornado.websocket.WebSocketClosedError:
 			pass
-			
+
 	def broadcastWorld(self):
 		cells = {cell.cellid:cell.state() for cell in self.cells.values()}
 		world = json.dumps({u"cells":cells, u"seeds":self.seeds, u"mines":self.mines})
@@ -92,7 +92,14 @@ class Glass:
 				t = threading.Thread(target=self.sendWorld, args = (cell,world))
 				t.daemon = True
 				t.start()
-			
+
+	def broadcastMessage(self, message):
+		for cell in self.cells.values():
+			try:
+				cell.socket.write_message(message)
+			except:
+				pass
+
 	def genSeeds(self):
 		left = 20*len(self.cells)-len(self.seeds)
 		now = str(int(time.time()))
@@ -102,7 +109,7 @@ class Glass:
 				u"mass": random.randint(20, 50),
 				u"color": ("rgba(%d,%d,%d,0.8)" % (random.randint(0,2)*127,random.randint(0,2)*127,random.randint(0,2)*127)), }
 				for i in range(left)}
-	
+
 class Cell:
 	def __init__(self, name, socket, enclojure, token, glass, cellid, color):
 		self.name = name
@@ -171,6 +178,7 @@ class Cell:
 		if incircle(self.x, self.y, self.radius()+self.speed(), cell.x, cell.y) and self.mass > cell.mass*1.1 and not self.immaterial and not cell.immaterial:
 			self.mass += cell.mass
 			with self.glass.cellsLock:
+				self.glass.broadcastMessage(json.dumps({u"log": "%s ate %s" % (self.name, cell.name)}))
 				del self.glass.cells[cellid]
 	def spawnMine(self):
 		if self.mass>1000:
@@ -184,6 +192,7 @@ class Cell:
 			del self.glass.mines[self.cellid]
 			if cell.mass<100:
 				with self.glass.cellsLock:
+					self.glass.broadcastMessage(json.dumps({u"log": "%s mined %s" % (self.name, cell.name)}))
 					del self.glass.cells[cellid]
 	def state(self):
 		ret = {
@@ -201,7 +210,7 @@ class Cell:
 		return ret
 
 glass = Glass(1024)
-		
+
 class EchoWebSocket(tornado.websocket.WebSocketHandler):
 	def open(self):
 		global glass

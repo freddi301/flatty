@@ -20,6 +20,17 @@ function initRanking(g){
 	setInterval(update, 5000);
 }
 
+function initLog(){
+	$("<div>", {id: "flattylog"}).appendTo($("body"));
+}
+
 function initGui(g){
 	initRanking(g);
+	initLog();
+}
+
+function flattyLog(text){
+	var flattylog = $("#flattylog");
+	$("<p>").text(text).appendTo($("#flattylog"));
+	flattylog.scrollTop(flattylog[0].scrollHeight);
 }
