@@ -7,7 +7,7 @@ You need:
 
 start the server: **python flatty.py**
 
-join the game on: **localhost/flatty.html**
+join the game on: **localhost/index.html**
 
 give your ip to your friends on LAN :)
 
