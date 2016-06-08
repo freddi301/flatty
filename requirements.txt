@@ -11,7 +11,6 @@ CherryPy==3.5.0
 cryptography==1.2.3
 cssselect==0.9.1
 cssutils==1.0
-debtags==2.0
 defer==1.0.6
 dirspec==13.10
 dnspython==1.12.0
