@@ -8,6 +8,7 @@ import random
 import json
 import math
 import time
+import os
 
 UPDATERATE = 0.2
 
@@ -232,5 +233,5 @@ application = tornado.web.Application([
 
 if __name__ == "__main__":
 	glass.computeWorld()
-	application.listen(80)
+	application.listen(os.environ.get('PORT', 80))
 	tornado.ioloop.IOLoop.instance().start()
