@@ -1,1 +1,1 @@
-web: python flatty.py
+web: python flatty.py --port=$PORT

@@ -226,12 +226,11 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		mex = json.loads(message)
 		glass.processMessage(mex)
 
-application = tornado.web.Application([
-		(r"/websocket", EchoWebSocket),
-		(r"/(.*)", tornado.web.StaticFileHandler, {"path": "static"}),
-])
-
 if __name__ == "__main__":
 	glass.computeWorld()
-	application.listen(os.environ.get('PORT', 80))
+	application = tornado.web.Application([
+			(r"/websocket", EchoWebSocket),
+			(r"/(.*)", tornado.web.StaticFileHandler, {"path": "static"}),
+	])
+	application.listen(int(os.environ.get('PORT', 5000)))
 	tornado.ioloop.IOLoop.instance().start()
