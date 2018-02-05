@@ -102,12 +102,12 @@ class Glass:
 				pass
 
 	def genSeeds(self):
-		left = 20*len(self.cells)-len(self.seeds)
+		left = 50*len(self.cells)-len(self.seeds)
 		now = str(int(time.time()))
 		return { now+str(i): {
 				u"x": random.randint(0, self.radius),
 				u"y": random.randint(0, self.radius),
-				u"mass": random.randint(20, 50),
+				u"mass": random.randint(10, 100),
 				u"color": ("rgba(%d,%d,%d,0.8)" % (random.randint(0,2)*127,random.randint(0,2)*127,random.randint(0,2)*127)), }
 				for i in range(left)}
 
@@ -210,7 +210,7 @@ class Cell:
 		}
 		return ret
 
-glass = Glass(1024)
+glass = Glass(2048)
 
 class EchoWebSocket(tornado.websocket.WebSocketHandler):
 	def open(self):
