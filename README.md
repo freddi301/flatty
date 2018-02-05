@@ -1,7 +1,7 @@
 # flatty
 Eat'n'grow or be eaten (a LAN clone of agar.io)
 
-# [demo](https://hidden-basin-85697.herokuapp.com/index.html)
+# [multiplayer demo](https://hidden-basin-85697.herokuapp.com/index.html)
 
 You need:
 - Python 3.4

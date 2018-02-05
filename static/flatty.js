@@ -3,7 +3,11 @@ var UPDATERATE = 300;
 function Player(name, color){
 	var p = {};
 	p.name = name;
-	p.ws = new WebSocket("ws://"+location.host+"/websocket?name="+name+"&color="+color);
+	var websocketProtocol = ({
+		"https:": "wss://",
+		"http:": "ws://"
+	})[location.protocol];
+	p.ws = new WebSocket(websocketProtocol+location.host+"/websocket?name="+name+"&color="+color);
 	p.ws.onmessage = function (e) {
 		var data = JSON.parse(e.data);
 		if ("token" in data){
